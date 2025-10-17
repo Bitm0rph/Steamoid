@@ -1,12 +1,10 @@
-import mongoose from "mongoose";
-const DB_NAME = "STEAM"
+import sqlite3 from "sqlite3";
+import { open } from "sqlite";
 
-export const connectDB = async () => {
-    try {
-        await mongoose.connect(`${process.env.MONGODG_URI}/${DB_NAME}`)
-        console.log("MongoDB connected");
-    } catch (error) {
-        console.log("mOngOdB connnect10n errrror",error);
-        process.exit(1);
-    }
+// open() automatically creates the DB file if it doesn’t exist
+export async function openDb() {
+  return open({
+    filename: "./products.db",
+    driver: sqlite3.Database
+  });
 }

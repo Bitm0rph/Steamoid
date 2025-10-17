@@ -1,38 +1,18 @@
-import mongoose from "mongoose";
+import { openDb } from "../db/db.js";
 
-const productSchema = new mongoose.Schema({
-    SKU: {
-        type: String,
-        required: true
-    },
-    Name: {
-        type: String,
-        required: true
-    },
-    Brand: {
-        type: String,
-        required: true
-    },
-    Color: {
-        type: String,
-        required: true
-    },
-    Size: {
-        type: String,
-        required: true
-    },
-    MRP: {
-        type: Number,
-        required: true
-    },
-    Price: {
-        type: Number,
-        required: true
-    },
-    Quantity: {
-        type: Number,
-        required: true
-    }
-})
-
-export const Product = mongoose.model("Product",productSchema);
+export async function createTable() {
+  const db = await openDb();
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS products (
+        sku TEXT,
+        name TEXT,
+        brand TEXT,
+        color TEXT,
+        size TEXT,
+        mrp REAL,
+        price REAL,
+        quantity REAL
+    )
+  `);
+  console.log("Products table ready");
+}
