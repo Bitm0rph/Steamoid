@@ -4,6 +4,7 @@ import { asyncHandler } from "../utils/AsyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { openDb } from '../db/db.js';
+import exp from 'constants';
 
 const valid = (data) => {
     return (
@@ -59,8 +60,66 @@ export const storeProduct = asyncHandler(async (req,res) => {
 
 export const getAllProducts = asyncHandler(async (req,res) => {
     const db = await openDb()
-    const products = await db.all("SELECT * FROM products")
-    return res.status(201).json(
+
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 5;
+
+    if (isNaN(page) || isNaN(limit) || page < 1 || limit < 1 || limit > 100) {
+        throw new ApiError(400, "Invalid pagination parameters");
+    }
+
+    const offset = (page-1)*limit;
+
+    const products = await db.all("SELECT * FROM products LIMIT ? OFFSET ?",[limit, offset]);
+
+    return res.status(200).json(
+        new ApiResponse(200, products)
+    )
+})
+
+export const getSelectedProducts = asyncHandler(async (req,res) => {
+    const db = await openDb();
+
+    const { brand, color, size, maxPrice, minPrice } = req.query;
+
+    let query = "SELECT * FROM products WHERE 1=1";
+    const params = [];
+
+    if(brand){
+        query += " AND brand = ?";
+        params.push(brand);
+    }
+    if(color){
+        query += " AND color = ?";
+        params.push(color);
+    }
+    if(size){
+        query += " AND size = ?";
+        params.push(size);
+    }
+    if(minPrice){
+        query += " AND price >= ?";
+        params.push(Number(minPrice));
+    }
+    if(maxPrice){
+        query += " AND price <= ?";
+        params.push(Number(maxPrice));
+    }
+
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 5;
+
+    if (isNaN(page) || isNaN(limit) || page < 1 || limit < 1 || limit > 100) {
+        throw new ApiError(400, "Invalid pagination parameters");
+    }
+    
+    const offset = (page-1)*limit;
+    query += " LIMIT ? OFFSET ?";
+    params.push(limit, offset);
+
+    const products = await db.all(query, params);
+
+    return res.status(200).json(
         new ApiResponse(200, products)
     )
 })

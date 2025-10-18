@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAllProducts, storeProduct } from "../controllers/product.controller.js";
+import { getAllProducts, getSelectedProducts, storeProduct } from "../controllers/product.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
 
@@ -11,3 +11,5 @@ router.route("/upload").post(
 )
 
 router.route("/products").get(getAllProducts);
+
+router.route("/products/search").get(getSelectedProducts);
