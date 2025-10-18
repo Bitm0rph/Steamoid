@@ -2,15 +2,17 @@ import fs from 'fs'
 import csv from 'csv-parser'
 import { asyncHandler } from "../utils/AsyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
+import { ApiResponse, ApiResponseGet } from "../utils/ApiResponse.js";
 import { openDb } from '../db/db.js';
-import exp from 'constants';
 
 const valid = (data) => {
+    let {sku, name, brand, mrp, price, quantity} = data;
+    mrp = Number(mrp)
+    price = Number(price);
+    quantity = Number(quantity)
     return (
-        data.sku && data.name && data.brand && data.mrp && data.price
-        && data.quantity && !isNaN(data.price) && !isNaN(data.mrp)
-        && !isNaN(data.quantity) && (data.price <= data.mrp) && (data.quantity>=0)
+        sku && name && brand && mrp && price && quantity && !isNaN(price) && !isNaN(mrp)
+        && !isNaN(quantity) && price <= mrp && quantity>=0
     )
 }
 
@@ -44,14 +46,14 @@ export const storeProduct = asyncHandler(async (req,res) => {
     .on("end", async () => {
         for(const row of validRows){
             await db.run(
-                "INSERT INTO products (sku, name, brand, color, size, mrp, price, quantity) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT OR IGNORE INTO products (sku, name, brand, color, size, mrp, price, quantity) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 [row.sku, row.name, row.brand, row.color, row.size, row.mrp, row.price, row.quantity]
             );
         }
         fs.unlinkSync(path)
         return res.status(201).json(
             new ApiResponse(200, {
-                "stored": validRows.length(),
+                "stored": validRows.length,
                 "failed": invalidRows
             },"Upload completed.")
         )
@@ -72,8 +74,16 @@ export const getAllProducts = asyncHandler(async (req,res) => {
 
     const products = await db.all("SELECT * FROM products LIMIT ? OFFSET ?",[limit, offset]);
 
+    const totalProducts = await db.all("SELECT * FROM products");
+    const total = totalProducts.length
+
+    if(products.length == 0){
+        return res.status(200).json(
+            new ApiResponse(200, total, "No product found on this page")
+        )
+    }
     return res.status(200).json(
-        new ApiResponse(200, products)
+        new ApiResponseGet(200, products, page, limit, total)
     )
 })
 
@@ -118,8 +128,26 @@ export const getSelectedProducts = asyncHandler(async (req,res) => {
     params.push(limit, offset);
 
     const products = await db.all(query, params);
+    
+    let countQuery = "SELECT COUNT(*) AS total FROM products WHERE 1=1";
+    const countParams = [];
 
+    if(brand) countParams.push(brand), countQuery += " AND brand = ?";
+    if(color) countParams.push(color), countQuery += " AND color = ?";
+    if(size) countParams.push(size), countQuery += " AND size = ?";
+    if(minPrice) countParams.push(Number(minPrice)), countQuery += " AND price >= ?";
+    if(maxPrice) countParams.push(Number(maxPrice)), countQuery += " AND price <= ?";
+
+    const totalResult = await db.get(countQuery, countParams);
+    const total = totalResult.total;
+
+
+    if(products.length == 0){
+        return res.status(200).json(
+            new ApiResponse(200, "No product found")
+        )
+    }
     return res.status(200).json(
-        new ApiResponse(200, products)
+        new ApiResponseGet(200, products, page, limit, total)
     )
 })

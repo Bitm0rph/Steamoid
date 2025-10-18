@@ -4,14 +4,15 @@ export async function createTable() {
   const db = await openDb();
   await db.exec(`
     CREATE TABLE IF NOT EXISTS products (
-        sku TEXT,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sku TEXT UNIQUE,
         name TEXT,
         brand TEXT,
         color TEXT,
         size TEXT,
         mrp REAL,
         price REAL,
-        quantity REAL
+        quantity INTEGER
     )
   `);
   console.log("Products table ready");

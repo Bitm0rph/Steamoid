@@ -3,7 +3,7 @@ import { getAllProducts, getSelectedProducts, storeProduct } from "../controller
 import { upload } from "../middlewares/multer.middleware.js";
 
 
-export const router = Router()
+const router = Router()
 
 router.route("/upload").post(
     upload.single("file"),
@@ -13,3 +13,6 @@ router.route("/upload").post(
 router.route("/products").get(getAllProducts);
 
 router.route("/products/search").get(getSelectedProducts);
+
+export default router
+

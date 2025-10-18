@@ -14,6 +14,7 @@ app.use(express.static('public'))
 
 createTable()
 
+
 import productRouter from "./routes/product.route.js"
 
 // routes
