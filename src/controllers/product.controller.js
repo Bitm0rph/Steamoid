@@ -2,7 +2,7 @@ import fs from 'fs'
 import csv from 'csv-parser'
 import { asyncHandler } from "../utils/AsyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
-import { ApiResponse, ApiResponseGet } from "../utils/ApiResponse.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 import { openDb } from '../db/db.js';
 
 const valid = (data) => {
@@ -51,7 +51,7 @@ export const storeProduct = asyncHandler(async (req,res) => {
             );
         }
         fs.unlinkSync(path)
-        return res.status(201).json(
+        return res.status(200).json(
             new ApiResponse(200, {
                 "stored": validRows.length,
                 "failed": invalidRows
@@ -77,13 +77,11 @@ export const getAllProducts = asyncHandler(async (req,res) => {
     const totalProducts = await db.all("SELECT * FROM products");
     const total = totalProducts.length
 
-    if(products.length == 0){
-        return res.status(200).json(
-            new ApiResponse(200, total, "No product found on this page")
-        )
-    }
+    let msg = "Success";
+    if(products.length === 0) msg = "No product found"
+
     return res.status(200).json(
-        new ApiResponseGet(200, products, page, limit, total)
+        new ApiResponse(200, products, msg, page, limit, total)
     )
 })
 
@@ -141,13 +139,10 @@ export const getSelectedProducts = asyncHandler(async (req,res) => {
     const totalResult = await db.get(countQuery, countParams);
     const total = totalResult.total;
 
+    let msg = "Success";
+    if(products.length === 0) msg = "No product found"
 
-    if(products.length == 0){
-        return res.status(200).json(
-            new ApiResponse(200, "No product found")
-        )
-    }
     return res.status(200).json(
-        new ApiResponseGet(200, products, page, limit, total)
+        new ApiResponse(200, products, msg, page, limit, total)
     )
 })

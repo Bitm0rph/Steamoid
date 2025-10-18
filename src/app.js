@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors"
-export const app = express();
-import { createTable } from "./models/product.model.js";
+const app = express();
+import { createTable } from "./table/product.table.js";
 
 app.use(cors({
     origin: process.env.CORS_ORIGIN,
@@ -19,3 +19,5 @@ import productRouter from "./routes/product.route.js"
 
 // routes
 app.use(productRouter);
+
+export default app

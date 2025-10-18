@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "nodemon src/index.js",
-    "test": "jest --runInBand"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand"
   },
   "author": "Ankit Paul",
   "license": "ISC",
